@@ -17,12 +17,12 @@ def get_user_info():
 
 
 def print_err(info):
-    print("[" + Fore.LIGHTRED_EX + "ERROR" + Fore.RESET + "]" + info)
+    print("[" + Fore.LIGHTRED_EX + "ERROR" + Fore.RESET + "] " + info)
 
 
 def print_info(info):
-    print("[" + Fore.LIGHTBLUE_EX + "INFO" + Fore.RESET + "]" + info)
+    print("[" + Fore.LIGHTBLUE_EX + "INFO" + Fore.RESET + "] " + info)
 
 
 def print_ok(info):
-    print("[" + Fore.GREEN + "OK" + Fore.RESET + "]" + info)
+    print("[" + Fore.GREEN + "OK" + Fore.RESET + "] " + info)
