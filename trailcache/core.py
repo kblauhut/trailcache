@@ -6,7 +6,7 @@ import gpxpy
 import gpxpy.gpx
 import math
 
-bbox_radius = 4000
+bbox_radius = 1000
 
 gpx_file = open('gpx-test/test.gpx', 'r')
 gpx = gpxpy.parse(gpx_file)
@@ -49,11 +49,10 @@ def request_caches(token, bbox):
         str(bbox[1]) + "," + str(bbox[2]) + "," + str(bbox[3])
 
     receive = requests.get(url)
-
+    print(url)
     if receive.status_code == 200:
         print_ok("recieved geocache info for waypoint")
     else:
         print_err("there was a problem recieving data from geocaching.com")
         return
-
     get_caches(receive.content)

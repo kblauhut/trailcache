@@ -9,12 +9,13 @@ def generate_bbox(latitude, longitude, distance):
     delta_lat = distance / 1000.0 / lat_km
     delta_long = distance / 1000.0 / long_km
 
-    min_lat = latitude - delta_lat
-    min_long = longitude - delta_long
-    max_lat = latitude + delta_lat
-    max_long = longitude + delta_long
+    min_lat = round(latitude - delta_lat, 6)
+    min_long = round(longitude - delta_long, 6)
+    max_lat = round(latitude + delta_lat, 6)
+    max_long = round(longitude + delta_long, 6)
 
-    bbox = [min_lat, min_long, max_lat, max_long]
+    bbox = [min_long, min_lat, max_long, max_lat]
+
     return bbox
 
 
