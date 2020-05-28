@@ -3,7 +3,6 @@ from trailcache.struct import Settings, Filters
 
 
 def get_user_info():
-    init()
     print("Please enter your token.")
     token = input()
 
@@ -30,3 +29,7 @@ def print_info(info):
 
 def print_ok(info):
     print("[" + Fore.GREEN + "OK" + Fore.RESET + "] " + info)
+
+
+def init_colorama():
+    init()

@@ -1,10 +1,11 @@
 from trailcache.coordmath import generate_bbox, distance_between
-from trailcache.commandline import get_user_info, print_err, print_info, print_ok
+from trailcache.commandline import get_user_info, print_err, print_info, print_ok, init_colorama
 from trailcache.xmlparser import get_caches
 import requests
 import gpxpy
 import gpxpy.gpx
 import math
+import os
 
 bbox_radius = 4000
 
@@ -15,6 +16,7 @@ gpx = gpxpy.parse(gpx_file)
 def main():
     cache_arr = []
 
+    init_colorama()
     settings = get_user_info()
 
     print_info("Waypoint interval: " +
@@ -44,6 +46,7 @@ def main():
     print_info(str(len(cache_arr)) +
                " caches remaining after applying filters")
     print_info("starting download of gpx files")
+    download_caches(cache_arr)
 
 
 def get_point_count():
@@ -71,8 +74,8 @@ def request_caches(token, bbox):
     return get_caches(receive.content)
 
 
-def cache_not_in_list(cache_list, cache):
-    for obj in cache_list:
+def cache_not_in_list(cache_arr, cache):
+    for obj in cache_arr:
         if obj.get_gc_code() == cache.get_gc_code():
             return False
     return True
@@ -99,3 +102,31 @@ def within_distance_limit(cache, distance):
                 if distance_between(point.latitude, point.longitude, cache.latitude, cache.longitude) <= distance:
                     return True
     return False
+
+
+def download_caches(cache_arr):
+    for cache in cache_arr:
+        url = "https://www.geocaching.com/play/map/api/gpx/" + cache.get_gc_code()
+        cookie = "TODO: Read in cookie"
+        headers = {"Cookie": cookie}
+
+        receive = requests.get(url, headers=headers)
+        if receive.status_code != 200:
+            print_err("there was a problem downloading geocache: " +
+                      cache.get_gc_code())
+        else:
+            make_pq_dir()
+            file = open("pocket-query/" + cache.get_gc_code() + ".gpx", "w")
+            file.write(str(receive.content))
+            print_info("downloaded geocache: " + cache.get_gc_code())
+
+
+def make_pq_dir():
+    path = os.getcwd() + "/pocket-query"
+    if not os.path.exists(path):
+        try:
+            os.mkdir(path)
+        except OSError:
+            print_err("creation of the directory %s failed" % path)
+        else:
+            print_info("successfully created the directory %s " % path)
