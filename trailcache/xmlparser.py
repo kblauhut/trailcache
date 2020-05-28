@@ -1,5 +1,5 @@
 from trailcache.commandline import print_err, print_info, print_ok
-from trailcache.cache import Cache
+from trailcache.struct import Cache
 import xml.etree.ElementTree as element_tree
 
 namespace = "{http://www.opengis.net/kml/2.2}"
@@ -42,6 +42,6 @@ def cache_to_obj(cache):
 
 def parse_lat_long(string):
     index = string.index(",")
-    latitude = string[:index]
-    longitude = string[index+1:]
+    longitude = float(string[:index])
+    latitude = float(string[index+1:])
     return [latitude, longitude]

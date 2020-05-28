@@ -15,31 +15,35 @@ gpx = gpxpy.parse(gpx_file)
 def main():
     cache_arr = []
 
-    user_info = get_user_info()
-    token = user_info[0]
-    limit = user_info[1]
-    distance = user_info[2]
+    settings = get_user_info()
 
-    print_info("Waypoint interval: " + str(waypoint_interval(limit)))
+    print_info("Waypoint interval: " +
+               str(waypoint_interval(settings.get_request_limit())))
     waypoint_count = 0
     query_count = 0
     for track in gpx.tracks:
         for segment in track.segments:
             for point in segment.points:
-                if waypoint_count == waypoint_interval(limit):
+                if waypoint_count == waypoint_interval(settings.get_request_limit()):
                     waypoint_count = 0
                     query_count = query_count + 1
-
                     bbox = generate_bbox(
                         point.latitude, point.longitude, bbox_radius)
-                    temp = request_caches(token, bbox)
+
+                    print_info("progress: " + str(query_count) + "/" +
+                               str(settings.get_request_limit()) + " sent")
+
+                    temp = request_caches(settings.get_token(), bbox)
+
                     for cache in temp:
                         if cache_not_in_list(cache_arr, cache):
                             cache_arr.append(cache)
-                    print_info("progress: " + str(query_count) +
-                               "/" + str(limit) + " sent")
                 waypoint_count = waypoint_count + 1
     print_info("found " + str(len(cache_arr)) + " unique caches")
+    cache_arr = apply_filters(cache_arr, settings.get_filters())
+    print_info(str(len(cache_arr)) +
+               " caches remaining after applying filters")
+    print_info("starting download of gpx files")
 
 
 def get_point_count():
@@ -61,9 +65,7 @@ def request_caches(token, bbox):
 
     receive = requests.get(url)
 
-    if receive.status_code == 200:
-        print_ok("recieved geocache info for waypoint")
-    else:
+    if receive.status_code != 200:
         print_err("there was a problem recieving data from geocaching.com")
         return
     return get_caches(receive.content)
@@ -76,5 +78,24 @@ def cache_not_in_list(cache_list, cache):
     return True
 
 
-def filter_caches():
-    return
+def apply_filters(cache_arr, filters):
+    temp_arr = []
+
+    for i, cache in enumerate(cache_arr):
+        if within_distance_limit(cache, filters.get_distance()):
+            temp_arr.append(cache)
+        if i % 100 == 0 and i != 0:
+            print_info("progress: " + str(i) + "/" + str(len(cache_arr)) +
+                       " caches processed")
+    cache_arr = temp_arr
+    temp_arr = []
+    return cache_arr
+
+
+def within_distance_limit(cache, distance):
+    for track in gpx.tracks:
+        for segment in track.segments:
+            for point in segment.points:
+                if distance_between(point.latitude, point.longitude, cache.latitude, cache.longitude) <= distance:
+                    return True
+    return False

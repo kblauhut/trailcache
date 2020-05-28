@@ -1,4 +1,5 @@
 from colorama import init, Fore
+from trailcache.struct import Settings, Filters
 
 
 def get_user_info():
@@ -7,13 +8,16 @@ def get_user_info():
     token = input()
 
     print("Set the request limit [Default = 25]")
-    limit = int(input())
+    request_limit = int(input())
 
     print("Set the max trail to cache distance in m [Default = 200]")
     distance = int(input())
 
-    user_info = [token, limit, distance]
-    return user_info
+    filters = Filters(distance, [34, 8, 243, 5, 1], [54, 2, 45, 4, 25],
+                      [1, 5], [1, 5])
+    settings = Settings(token, request_limit, filters)
+
+    return settings
 
 
 def print_err(info):
