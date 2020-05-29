@@ -1,5 +1,10 @@
+from tqdm import tqdm
 from colorama import init, Fore
 from trailcache.struct import Settings, Filters
+
+
+def init_colorama():
+    init()
 
 
 def get_user_info():
@@ -31,5 +36,15 @@ def print_ok(info):
     print("[" + Fore.GREEN + "OK" + Fore.RESET + "] " + info)
 
 
-def init_colorama():
-    init()
+class ProgressBar:
+    def __init__(self, info, n):
+        self.info = info
+        self.n = n
+        self.bar = tqdm(total=n, desc="[" + Fore.LIGHTYELLOW_EX +
+                        "STATUS" + Fore.RESET + "] ", bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt}")
+
+    def update(self):
+        self.bar.update(1)
+
+    def close(self):
+        self.bar.close()

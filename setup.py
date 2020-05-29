@@ -10,5 +10,5 @@ setup(
         'console_scripts': ['run=trailcache.core:main'],
     },
     # external packages as dependencies
-    install_requires=['gpxpy', 'colorama', 'requests']
+    install_requires=['gpxpy', 'colorama', 'requests', 'tqdm']
 )

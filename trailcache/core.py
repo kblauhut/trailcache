@@ -1,5 +1,5 @@
 from trailcache.coordmath import generate_bbox, distance_between
-from trailcache.commandline import get_user_info, print_err, print_info, print_ok, init_colorama
+from trailcache.commandline import get_user_info, print_err, print_info, print_ok, init_colorama, ProgressBar
 from trailcache.xmlparser import get_caches
 import requests
 import gpxpy
@@ -22,18 +22,18 @@ def main():
     print_info("Waypoint interval: " +
                str(waypoint_interval(settings.get_request_limit())))
     waypoint_count = 0
-    query_count = 0
+
+    pb = ProgressBar("", settings.get_request_limit())
+
     for track in gpx.tracks:
         for segment in track.segments:
             for point in segment.points:
                 if waypoint_count == waypoint_interval(settings.get_request_limit()):
                     waypoint_count = 0
-                    query_count = query_count + 1
                     bbox = generate_bbox(
                         point.latitude, point.longitude, bbox_radius)
 
-                    print_info("progress: " + str(query_count) + "/" +
-                               str(settings.get_request_limit()) + " sent")
+                    pb.update()
 
                     temp = request_caches(settings.get_token(), bbox)
 
@@ -41,6 +41,7 @@ def main():
                         if cache_not_in_list(cache_arr, cache):
                             cache_arr.append(cache)
                 waypoint_count = waypoint_count + 1
+    pb.close()
     print_info("found " + str(len(cache_arr)) + " unique caches")
     cache_arr = apply_filters(cache_arr, settings.get_filters())
     print_info(str(len(cache_arr)) +
