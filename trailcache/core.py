@@ -71,7 +71,7 @@ def request_caches(token, bbox):
     if receive.status_code != 200:
         print_err("there was a problem recieving data from geocaching.com")
         return
-    return get_caches(receive.content)
+    return get_caches(receive.text)
 
 
 def cache_not_in_list(cache_arr, cache):
@@ -107,7 +107,7 @@ def within_distance_limit(cache, distance):
 def download_caches(cache_arr):
     for cache in cache_arr:
         url = "https://www.geocaching.com/play/map/api/gpx/" + cache.get_gc_code()
-        cookie = "TODO: Read in cookie"
+        cookie = "gspkauth=" + "TODO"
         headers = {"Cookie": cookie}
 
         receive = requests.get(url, headers=headers)
@@ -116,8 +116,10 @@ def download_caches(cache_arr):
                       cache.get_gc_code())
         else:
             make_pq_dir()
-            file = open("pocket-query/" + cache.get_gc_code() + ".gpx", "w")
-            file.write(str(receive.content))
+
+            gpx_file = open("pocket-query/" +
+                            cache.get_gc_code() + ".gpx", "w", encoding='utf-8')
+            gpx_file.write(receive.text)
             print_info("downloaded geocache: " + cache.get_gc_code())
 
 
