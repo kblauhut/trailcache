@@ -55,16 +55,32 @@ class Filters:
 
 
 class Settings:
-    def __init__(self, token, request_limit, filters):
-        self.token = token
+    def __init__(self, input_path, output_path, ge_token, gspk_auth_token, request_limit, search_radius, filters):
+        self.input_path = input_path
+        self.output_path = output_path
+        self.ge_token = ge_token
+        self.gspk_auth_token = gspk_auth_token
         self.request_limit = request_limit
+        self.search_radius = search_radius
         self.filters = filters
 
-    def get_token(self):
-        return self.token
+    def get_input_path(self):
+        return self.input_path
+
+    def get_output_path(self):
+        return self.output_path
+
+    def get_ge_token(self):
+        return self.ge_token
+
+    def get_gspk_auth_token(self):
+        return self.gspk_auth_token
 
     def get_request_limit(self):
         return self.request_limit
+
+    def get_search_radius(self):
+        return self.search_radius
 
     def get_filters(self):
         return self.filters

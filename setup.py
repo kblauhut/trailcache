@@ -5,10 +5,9 @@ setup(
     version='1.0',
     description='Downloads geocaches along a GPX trail.',
     author='Kolja Blauhut',
-    packages=['trailcache'],  # same as name
+    packages=['trailcache'],
     entry_points={
         'console_scripts': ['run=trailcache.core:main'],
     },
-    # external packages as dependencies
     install_requires=['gpxpy', 'colorama', 'requests', 'tqdm']
 )

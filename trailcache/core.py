@@ -5,52 +5,55 @@ import requests
 import gpxpy
 import gpxpy.gpx
 import math
+import sys
 import os
-
-bbox_radius = 4000
-
-gpx_file = open('gpx-test/test.gpx', 'r')
-gpx = gpxpy.parse(gpx_file)
 
 
 def main():
     cache_arr = []
 
     init_colorama()
-    settings = get_user_info()
+    settings = get_user_info(sys.argv)
 
-    print_info("Waypoint interval: " +
-               str(waypoint_interval(settings.get_request_limit())))
+    gpx_file = open(settings.get_input_path(), 'r')
+    gpx = gpxpy.parse(gpx_file)
+
+    print_info("waypoint interval: " +
+               str(waypoint_interval(settings.get_request_limit(), gpx)))
     waypoint_count = 0
 
-    pb = ProgressBar("", settings.get_request_limit())
+    pb = ProgressBar("requests sent", settings.get_request_limit())
 
     for track in gpx.tracks:
         for segment in track.segments:
             for point in segment.points:
-                if waypoint_count == waypoint_interval(settings.get_request_limit()):
+                if waypoint_count == waypoint_interval(settings.get_request_limit(), gpx):
                     waypoint_count = 0
                     bbox = generate_bbox(
-                        point.latitude, point.longitude, bbox_radius)
+                        point.latitude, point.longitude, settings.get_search_radius())
 
                     pb.update()
 
-                    temp = request_caches(settings.get_token(), bbox)
+                    temp = request_caches(settings.get_ge_token(), bbox)
 
                     for cache in temp:
                         if cache_not_in_list(cache_arr, cache):
                             cache_arr.append(cache)
                 waypoint_count = waypoint_count + 1
     pb.close()
+
     print_info("found " + str(len(cache_arr)) + " unique caches")
-    cache_arr = apply_filters(cache_arr, settings.get_filters())
+
+    cache_arr = apply_filters(cache_arr, settings.get_filters(), gpx)
+
     print_info(str(len(cache_arr)) +
                " caches remaining after applying filters")
     print_info("starting download of gpx files")
-    download_caches(cache_arr)
+
+    download_caches(cache_arr, settings)
 
 
-def get_point_count():
+def get_point_count(gpx):
     count = 0
     for track in gpx.tracks:
         for segment in track.segments:
@@ -58,8 +61,8 @@ def get_point_count():
     return count
 
 
-def waypoint_interval(limit):
-    return math.floor(get_point_count()/limit)
+def waypoint_interval(limit, gpx):
+    return math.floor(get_point_count(gpx)/limit)
 
 
 def request_caches(token, bbox):
@@ -82,21 +85,22 @@ def cache_not_in_list(cache_arr, cache):
     return True
 
 
-def apply_filters(cache_arr, filters):
+def apply_filters(cache_arr, filters, gpx):
     temp_arr = []
 
-    for i, cache in enumerate(cache_arr):
-        if within_distance_limit(cache, filters.get_distance()):
+    pb = ProgressBar("caches processed", len(cache_arr))
+
+    for cache in cache_arr:
+        if within_distance_limit(cache, filters.get_distance(), gpx):
             temp_arr.append(cache)
-        if i % 100 == 0 and i != 0:
-            print_info("progress: " + str(i) + "/" + str(len(cache_arr)) +
-                       " caches processed")
+        pb.update()
     cache_arr = temp_arr
     temp_arr = []
+    pb.close()
     return cache_arr
 
 
-def within_distance_limit(cache, distance):
+def within_distance_limit(cache, distance, gpx):
     for track in gpx.tracks:
         for segment in track.segments:
             for point in segment.points:
@@ -105,10 +109,10 @@ def within_distance_limit(cache, distance):
     return False
 
 
-def download_caches(cache_arr):
+def download_caches(cache_arr, settings):
     for cache in cache_arr:
         url = "https://www.geocaching.com/play/map/api/gpx/" + cache.get_gc_code()
-        cookie = "gspkauth=" + "TODO"
+        cookie = "gspkauth=" + settings.get_gspk_auth_token()
         headers = {"Cookie": cookie}
 
         receive = requests.get(url, headers=headers)
@@ -116,20 +120,6 @@ def download_caches(cache_arr):
             print_err("there was a problem downloading geocache: " +
                       cache.get_gc_code())
         else:
-            make_pq_dir()
-
-            gpx_file = open("pocket-query/" +
-                            cache.get_gc_code() + ".gpx", "w", encoding='utf-8')
+            gpx_file = open(settings.get_output_path(), "w", encoding='utf-8')
             gpx_file.write(receive.text)
             print_info("downloaded geocache: " + cache.get_gc_code())
-
-
-def make_pq_dir():
-    path = os.getcwd() + "/pocket-query"
-    if not os.path.exists(path):
-        try:
-            os.mkdir(path)
-        except OSError:
-            print_err("creation of the directory %s failed" % path)
-        else:
-            print_info("successfully created the directory %s " % path)
