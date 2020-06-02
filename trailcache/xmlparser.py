@@ -1,6 +1,9 @@
 from trailcache.commandline import print_err, print_info, print_ok
 from trailcache.struct import Cache
+from io import StringIO
+from xml.etree.ElementTree import Element, SubElement
 import xml.etree.ElementTree as element_tree
+
 
 namespace = "{http://www.opengis.net/kml/2.2}"
 
@@ -45,3 +48,28 @@ def parse_lat_long(string):
     longitude = float(string[:index])
     latitude = float(string[index+1:])
     return [latitude, longitude]
+
+
+def create_gpx():
+    gpx = Element("gpx")
+    return gpx
+
+
+def append_cache(cache, gpx):
+    it = element_tree.iterparse(StringIO(cache))
+
+    for _, el in it:
+        prefix, has_namespace, postfix = el.tag.partition('}')
+        if has_namespace:
+            el.tag = postfix
+    cache_tree = it.root
+
+    for child in cache_tree:
+        print(element_tree.tostring(child))
+        gpx.append(child)
+    return gpx
+
+
+def xml_write(xml, path):
+    tree = element_tree.ElementTree(xml)
+    tree.write(path, xml_declaration=True, encoding='utf-8')

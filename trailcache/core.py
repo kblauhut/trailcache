@@ -1,6 +1,6 @@
 from trailcache.coordmath import generate_bbox, distance_between
 from trailcache.commandline import get_user_info, print_err, print_info, print_ok, init_colorama, ProgressBar
-from trailcache.xmlparser import get_caches
+from trailcache.xmlparser import get_caches, create_gpx, append_cache, xml_write
 import requests
 import gpxpy
 import gpxpy.gpx
@@ -110,6 +110,8 @@ def within_distance_limit(cache, distance, gpx):
 
 
 def download_caches(cache_arr, settings):
+    gpx_file = create_gpx()
+    pb = ProgressBar("caches downloaded", len(cache_arr))
     for cache in cache_arr:
         url = "https://www.geocaching.com/play/map/api/gpx/" + cache.get_gc_code()
         cookie = "gspkauth=" + settings.get_gspk_auth_token()
@@ -120,6 +122,8 @@ def download_caches(cache_arr, settings):
             print_err("there was a problem downloading geocache: " +
                       cache.get_gc_code())
         else:
-            gpx_file = open(settings.get_output_path(), "w", encoding='utf-8')
-            gpx_file.write(receive.text)
-            print_info("downloaded geocache: " + cache.get_gc_code())
+            receive.encoding = "utf-8"
+            gpx_file = append_cache(receive.text, gpx_file)
+        pb.update()
+    xml_write(gpx_file, settings.get_output_path())
+    pb.close()

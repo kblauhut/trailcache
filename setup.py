@@ -3,7 +3,7 @@ from setuptools import setup
 setup(
     name='trailcache',
     version='1.0',
-    description='Downloads geocaches along a GPX trail.',
+    description='Downloads geocaches along a GPX route or track.',
     author='Kolja Blauhut',
     packages=['trailcache'],
     entry_points={
