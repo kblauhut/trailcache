@@ -8,7 +8,6 @@ def init_colorama():
 
 
 def get_user_info(args):
-    print(args)
     print("Please enter your google earth token.")
     ge_token = input()
 

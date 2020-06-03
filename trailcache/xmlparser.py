@@ -52,6 +52,12 @@ def parse_lat_long(string):
 
 def create_gpx():
     gpx = Element("gpx")
+    gpx.set("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance")
+    gpx.set("xmlns:xsd", "http://www.w3.org/2001/XMLSchema")
+    gpx.set("version", "1.0")
+    gpx.set("creator", "Trailcache Pocket Query")
+    gpx.set("xsi:schemaLocation", "http://www.topografix.com/GPX/1/0 http://www.topografix.com/GPX/1/0/gpx.xsd http://www.groundspeak.com/cache/1/0 http://www.groundspeak.com/cache/1/0/cache.xsd")
+    gpx.set("xmlns", "http://www.topografix.com/GPX/1/0")
     return gpx
 
 
@@ -59,13 +65,14 @@ def append_cache(cache, gpx):
     it = element_tree.iterparse(StringIO(cache))
 
     for _, el in it:
-        prefix, has_namespace, postfix = el.tag.partition('}')
-        if has_namespace:
-            el.tag = postfix
+        _, _, el.tag = el.tag.rpartition('}')
     cache_tree = it.root
 
-    for child in cache_tree:
-        print(element_tree.tostring(child))
+    for child in cache_tree.findall("wpt"):
+        cache = child.find("cache")
+        cache.set("xmlns:groundspeak", "http://www.groundspeak.com/cache/1/0")
+        for cacheinfo in list(cache.iter()):
+            cacheinfo.tag = "groundspeak:" + cacheinfo.tag
         gpx.append(child)
     return gpx
 
